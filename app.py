@@ -28,7 +28,7 @@ def validate():
     if qr_id in validate_ids:
         return jsonify({"success": False, "error": "QR già utilizzato"}), 400
     
-    validate_ids.addr(qr_id)
+    validate_ids.add(qr_id)
 
     return jsonify({
         "success": True,
