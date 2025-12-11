@@ -3,9 +3,9 @@ from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 
-QR_PATTERN = r"NOME:(.*?);COGNOME:(.*?);GRUPPO:(.*)"
+QR_PATTERN = r"ID:(.*?);NOME:(.*?);COGNOME:(.*?);GRUPPO:(.*)"
 
-validate_qr = set()
+validate_ids = set()
 
 @app.route("/")
 def index():
@@ -14,22 +14,25 @@ def index():
 @app.route("/validate", methods=["POST"])
 def validate():
     data = request.json.get("qr_text", "")
+
     match = re.match(QR_PATTERN, data)
 
     if not match:
         return jsonify({"success": False, "error": "QR non valido"}), 400
     
-    if data in validate_qr:
+    qr_id = match.group(1).strip()
+    nome = match.group(2).strip()
+    cognome = match.group(3).strip()
+    gruppo = match.group(4).strip()
+
+    if qr_id in validate_ids:
         return jsonify({"success": False, "error": "QR già utilizzato"}), 400
-
-    nome = match.group(1).strip()
-    cognome = match.group(2).strip()
-    gruppo = match.group(3).strip()
-
-    validate_qr.add(data)
+    
+    validate_ids.addr(qr_id)
 
     return jsonify({
         "success": True,
+        "id": qr_id,
         "nome": nome,
         "cognome": cognome,
         "gruppo": gruppo
