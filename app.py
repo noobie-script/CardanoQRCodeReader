@@ -5,6 +5,8 @@ app = Flask(__name__)
 
 QR_PATTERN = r"NOME:(.*?);COGNOME:(.*?);GRUPPO:(.*)"
 
+validate_qr = set()
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -14,20 +16,24 @@ def validate():
     data = request.json.get("qr_text", "")
     match = re.match(QR_PATTERN, data)
 
-    if match:
-        nome = match.group(1).strip()
-        cognome = match.group(2).strip()
-        gruppo = match.group(3).strip()
+    if not match:
+        return jsonify({"success": False, "error": "QR non valido"}), 400
+    
+    if data in validate_qr:
+        return jsonify({"success": False, "error": "QR già utilizzato"}), 400
 
-        return jsonify({
-            "success": True,
-            "nome": nome,
-            "cognome": cognome,
-            "gruppo": gruppo
-        })
+    nome = match.group(1).strip()
+    cognome = match.group(2).strip()
+    gruppo = match.group(3).strip()
 
-    return jsonify({"success": False, "error": "QR non valido"}), 400
+    validate_qr.add(data)
 
+    return jsonify({
+        "success": True,
+        "nome": nome,
+        "cognome": cognome,
+        "gruppo": gruppo
+    })
 
 if __name__ == "__main__":
     import os
